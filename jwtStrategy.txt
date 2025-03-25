@@ -1,0 +1,76 @@
+Updated Setup with JWT Strategy
+1. Install Required Packages
+Make sure you have the necessary libraries installed for using Passport and JWT:
+
+npm install passport passport-jwt jsonwebtoken body-parser express
+
+2. Initialize Passport
+Add Passport to your application as middleware:
+
+const express = require('express');
+const passport = require('passport');
+const app = express();
+
+app.use(passport.initialize()); // Initialize Passport
+
+3. Configure JWT Strategy
+Set up the  strategy to handle JWT authentication:
+
+const JwtStrategy = require('passport-jwt').Strategy;
+const ExtractJwt = require('passport-jwt').ExtractJwt;
+
+// Define your secret key
+const SECRET_KEY = 'your_secret_key'; // Change this to a secure value
+
+// JWT Strategy configuration options
+const opts = {
+  jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(), // Extract JWT from the Authorization header
+  secretOrKey: SECRET_KEY, // Use the same secret key to verify the token
+};
+
+// Define JWT strategy
+passport.use(new JwtStrategy(opts, (jwtPayload, done) => {
+  try {
+    // jwtPayload contains the data encoded in the token (e.g., user information)
+    const user = getUserById(jwtPayload.id); // Replace this with your user lookup logic
+    if (user) {
+      return done(null, user); // If the user is found, authentication succeeds
+    }
+    return done(null, false); // If the user isn't found, authentication fails
+  } catch (error) {
+    return done(error, false); // Handle errors
+  }
+}));
+
+4. Login Route to Issue JWT
+Set up a route to authenticate a user and issue a JWT upon successful login:
+
+const jwt = require('jsonwebtoken');
+const bodyParser = require('body-parser');
+
+app.use(bodyParser.json()); // Parse incoming JSON requests
+
+// Login route
+app.post('/login', (req, res) => {
+  const { username, password } = req.body;
+
+  // Replace this with your user authentication logic
+  const user = authenticateUser(username, password); // A function to validate credentials
+  if (user) {
+    const payload = { id: user.id, username: user.username }; // Data to encode in the JWT
+    const token = jwt.sign(payload, SECRET_KEY, { expiresIn: '1h' }); // Generate JWT with an expiration time
+    return res.json({ message: 'Logged in successfully', token }); // Send token to the client
+  }
+
+  return res.status(401).json({ message: 'Invalid credentials' });
+});
+
+5. Protect Routes with JWT Authentication
+Use Passport to protect routes that require JWT-based authentication:
+
+// Protected route
+app.get('/protected', passport.authenticate('jwt', { session: false }), (req, res) => {
+  res.json({ message: 'Access granted', user: req.user }); // Access req.user to see the authenticated user's details
+});
+
+Full Workflow Recap:
