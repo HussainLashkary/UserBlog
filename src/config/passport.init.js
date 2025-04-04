@@ -4,12 +4,12 @@ const fs = require("fs");
 const path = require("path");
 const User = require("../modules/user/user.model");
 
-const pathToKey = path.join(__dirname, '../..', 'id_rsa_priv.pem');
-const priv = fs.readFileSync(pathToKey, "utf8");
+const pathToKey = path.join(__dirname, '../..', 'id_rsa_pub.pem');
+const pubKey = fs.readFileSync(pathToKey, "utf8");
 console.log(pathToKey)
 const options = {
     jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
-    secretOrKey: priv,
+    secretOrKey: pubKey,
     algorithms: ["RS256"]
 }
 
